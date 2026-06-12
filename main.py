@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from .dataset_loader import ARADDataset
+from dataset_loader import ARADDataset
 
 
 # =====================================================
