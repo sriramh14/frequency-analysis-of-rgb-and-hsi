@@ -107,13 +107,13 @@ def radial_power_spectrum(fft_mag):
 # Main
 # =====================================================
 
-dataset = ARADDataset(
+ds = ARADDataset(
     root_dir="data",
     train=True,
     download=False
 )
 dataset = DataLoader(
-    dataset,
+    ds,
     batch_size=2,
     shuffle=True,
 )
