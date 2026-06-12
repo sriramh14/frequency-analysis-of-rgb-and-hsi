@@ -168,6 +168,3 @@ show_fft_slices(
     diff,
     "diff FFT"
 )
-
-
-plt.show()
