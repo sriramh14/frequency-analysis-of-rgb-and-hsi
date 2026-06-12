@@ -19,8 +19,8 @@ class ARADDataset(Dataset):
         self,
         root_dir="data",
         train=True,
-        train_images=200,
-        total_images=230,
+        train_images=2,
+        total_images=2,
         cube_key="cube",
         download=True
     ):
