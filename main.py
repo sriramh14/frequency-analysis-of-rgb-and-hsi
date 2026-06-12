@@ -58,7 +58,8 @@ def show_fft_slices(fft_mag, title):
 
     plt.suptitle(title)
 
-    plt.show()
+    plt.savefig("plot.png")
+    plt.close()
 
 
 # =====================================================
@@ -139,7 +140,7 @@ hsi_np = hsi.permute(
 rgb_fft = fft3(rgb_np)
 
 hsi_fft = fft3(hsi_np)
-
+print("FFT created")
 # ------------------------------------
 # Visualize
 # ------------------------------------
