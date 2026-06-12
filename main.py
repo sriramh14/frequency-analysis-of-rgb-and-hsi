@@ -111,6 +111,11 @@ dataset = ARADDataset(
     train=True,
     download=False
 )
+dataset = DataLoader(
+    dataset,
+    batch_size=2,
+    shuffle=True,
+)
 
 sample_idx = 0
 
