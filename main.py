@@ -35,7 +35,7 @@ def spatial_fft(volume):
             np.abs(F)
         )
 
-    return fft_mag
+    return log(fft_mag)
 
 
 # =====================================================
