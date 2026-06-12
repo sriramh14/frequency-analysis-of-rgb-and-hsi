@@ -158,54 +158,16 @@ rgb_fft = fft3(rgb_np)
 
 hsi_fft = fft3(hsi_np)
 print("FFT created")
+
+diff = abs(hsi_fft - rgb_fft)
 # ------------------------------------
 # Visualize
 # ------------------------------------
 
 show_fft_slices(
-    rgb_fft,
-    "RGB 3D FFT"
+    diff,
+    "diff FFT"
 )
 
-show_fft_slices(
-    hsi_fft,
-    "HSI 3D FFT"
-)
-
-# ------------------------------------
-# Radial power spectrum
-# ------------------------------------
-
-rgb_radial = radial_power_spectrum(
-    rgb_fft
-)
-
-hsi_radial = radial_power_spectrum(
-    hsi_fft
-)
-
-plt.figure(figsize=(8, 5))
-
-plt.plot(
-    rgb_radial / rgb_radial.max(),
-    label="RGB"
-)
-
-plt.plot(
-    hsi_radial / hsi_radial.max(),
-    label="HSI"
-)
-
-plt.xlabel("Radius")
-
-plt.ylabel("Normalized Power")
-
-plt.title(
-    "3D Frequency Distribution"
-)
-
-plt.legend()
-
-plt.grid()
 
 plt.show()
