@@ -29,6 +29,7 @@ def fft3(volume):
 # Central slices
 # =====================================================
 
+
 def show_fft_slices(fft_mag, title):
 
     H, W, C = fft_mag.shape
@@ -40,27 +41,43 @@ def show_fft_slices(fft_mag, title):
     fig, ax = plt.subplots(1, 3, figsize=(15, 5))
 
     ax[0].imshow(
-        fft_mag[h],
+        fft_mag[h, :, :],
         aspect="auto"
     )
-    ax[0].set_title("X Slice")
+    ax[0].set_title(f"X Slice ({h})")
 
     ax[1].imshow(
         fft_mag[:, w, :],
         aspect="auto"
     )
-    ax[1].set_title("Y Slice")
+    ax[1].set_title(f"Y Slice ({w})")
 
     ax[2].imshow(
-        fft_mag[:, :, c]
+        fft_mag[:, :, c],
+        aspect="auto"
     )
-    ax[2].set_title("Spectral Slice")
+    ax[2].set_title(f"Spectral Slice ({c})")
 
-    plt.suptitle(title)
+    fig.suptitle(title)
 
-    plt.savefig("plot.png")
-    plt.close()
+    plt.tight_layout()
 
+    filename = (
+        title.lower()
+        .replace(" ", "_")
+        .replace("/", "_")
+        + ".png"
+    )
+
+    plt.savefig(
+        filename,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    print(f"Saved {filename}")
+
+    plt.close(fig)
 
 # =====================================================
 # Radial spectrum
