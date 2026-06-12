@@ -1,124 +1,165 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-from torch.utils.data import DataLoader
 
 from dataset_loader import ARADDataset
 
 
 # =====================================================
-# FFT utilities
+# Spatial FFT per band
 # =====================================================
 
-def fft3(volume):
+def spatial_fft(volume):
+    """
+    volume: H x W x C
 
-    volume = volume.astype(np.float32)
+    returns:
+        H x W x C
+    """
 
-    F = np.fft.fftn(volume)
+    H, W, C = volume.shape
 
-    F = np.fft.fftshift(F)
+    fft_mag = np.zeros(
+        (H, W, C),
+        dtype=np.float32
+    )
 
-    mag = np.abs(F)
+    for c in range(C):
 
-    log_mag = np.log1p(mag)
+        F = np.fft.fft2(
+            volume[:, :, c]
+        )
 
-    return log_mag
+        F = np.fft.fftshift(F)
+
+        fft_mag[:, :, c] = np.log1p(
+            np.abs(F)
+        )
+
+    return fft_mag
 
 
 # =====================================================
-# Central slices
+# RGB FFT visualization
 # =====================================================
 
+def show_rgb_fft(rgb_fft):
 
-def show_fft_slices(fft_mag, title):
-
-    H, W, C = fft_mag.shape
-
-    h = H // 2
-    w = W // 2
-    c = C // 2
-
-    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-
-    ax[0].imshow(
-        fft_mag[h, :, :],
-        aspect="auto"
+    fig, ax = plt.subplots(
+        1,
+        3,
+        figsize=(15, 5)
     )
-    ax[0].set_title(f"X Slice ({h})")
 
-    ax[1].imshow(
-        fft_mag[:, w, :],
-        aspect="auto"
-    )
-    ax[1].set_title(f"Y Slice ({w})")
+    names = ["Red", "Green", "Blue"]
 
-    ax[2].imshow(
-        fft_mag[:, :, c],
-        aspect="auto"
-    )
-    ax[2].set_title(f"Spectral Slice ({c})")
+    for i in range(3):
 
-    fig.suptitle(title)
+        ax[i].imshow(
+            rgb_fft[:, :, i]
+        )
+
+        ax[i].set_title(
+            names[i]
+        )
+
+        ax[i].axis("off")
 
     plt.tight_layout()
 
-    filename = (
-        title.lower()
-        .replace(" ", "_")
-        .replace("/", "_")
-        + ".png"
-    )
-
     plt.savefig(
-        filename,
+        "rgb_fft.png",
         dpi=300,
         bbox_inches="tight"
     )
 
-    print(f"Saved {filename}")
+    plt.close()
 
-    plt.close(fig)
 
 # =====================================================
-# Radial spectrum
+# HSI FFT visualization
 # =====================================================
 
-def radial_power_spectrum(fft_mag):
+def show_hsi_fft(hsi_fft):
 
-    H, W, C = fft_mag.shape
-
-    center = np.array(
-        [H//2, W//2, C//2]
+    fig, ax = plt.subplots(
+        4,
+        8,
+        figsize=(20, 10)
     )
 
-    coords = np.indices(
-        (H, W, C)
-    ).transpose(
-        1, 2, 3, 0
+    ax = ax.flatten()
+
+    for band in range(31):
+
+        ax[band].imshow(
+            hsi_fft[:, :, band]
+        )
+
+        ax[band].set_title(
+            f"Band {band}"
+        )
+
+        ax[band].axis("off")
+
+    for i in range(31, len(ax)):
+        ax[i].axis("off")
+
+    plt.tight_layout()
+
+    plt.savefig(
+        "hsi_fft.png",
+        dpi=300,
+        bbox_inches="tight"
     )
 
-    dist = np.linalg.norm(
-        coords - center,
-        axis=-1
+    plt.close()
+
+
+# =====================================================
+# FFT Difference Visualization
+# =====================================================
+
+def show_fft_difference(rgb_fft, hsi_fft):
+
+    rgb_mean = rgb_fft.mean(
+        axis=2
     )
 
-    dist = dist.astype(int)
+    fig, ax = plt.subplots(
+        4,
+        8,
+        figsize=(20, 10)
+    )
 
-    power = fft_mag ** 2
+    ax = ax.flatten()
 
-    max_r = dist.max()
+    for band in range(31):
 
-    radial = np.zeros(max_r + 1)
+        diff = np.abs(
+            hsi_fft[:, :, band]
+            - rgb_mean
+        )
 
-    for r in range(max_r + 1):
+        ax[band].imshow(diff)
 
-        mask = dist == r
+        ax[band].set_title(
+            f"Band {band}"
+        )
 
-        if np.any(mask):
+        ax[band].axis("off")
 
-            radial[r] = power[mask].mean()
+    for i in range(31, len(ax)):
+        ax[i].axis("off")
 
-    return radial
+    plt.tight_layout()
+
+    plt.savefig(
+        "fft_difference.png",
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
 
 
 # =====================================================
@@ -138,33 +179,42 @@ rgb, hsi = dataset[sample_idx]
 print("RGB:", rgb.shape)
 print("HSI:", hsi.shape)
 
-# ------------------------------------
-# Convert to HWC
-# ------------------------------------
-
 rgb_np = rgb.permute(
-    1, 2, 0
+    1,
+    2,
+    0
 ).numpy()
 
 hsi_np = hsi.permute(
-    1, 2, 0
+    1,
+    2,
+    0
 ).numpy()
 
-# ------------------------------------
-# FFT
-# ------------------------------------
+rgb_fft = spatial_fft(
+    rgb_np
+)
 
-rgb_fft = fft3(rgb_np)
+hsi_fft = spatial_fft(
+    hsi_np
+)
 
-hsi_fft = fft3(hsi_np)
 print("FFT created")
 
-diff = abs(hsi_fft - rgb_fft)
-# ------------------------------------
-# Visualize
-# ------------------------------------
-
-show_fft_slices(
-    diff,
-    "diff FFT"
+show_rgb_fft(
+    rgb_fft
 )
+
+show_hsi_fft(
+    hsi_fft
+)
+
+show_fft_difference(
+    rgb_fft,
+    hsi_fft
+)
+
+print("Saved:")
+print("  rgb_fft.png")
+print("  hsi_fft.png")
+print("  fft_difference.png")
